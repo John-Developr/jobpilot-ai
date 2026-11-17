@@ -51,7 +51,7 @@ export function selectJobsForIngest(
 
 /**
  * Runs one source now. Synchronous for Phase 3 (a few HTTP calls); moves to a
- * Trigger.dev task in Phase 6 with the same steps.
+ * Trigger.dev task in Phase 7 with the same steps.
  */
 export async function syncSource(ctx: AuthenticatedContext, key: AutomatedConnectorKey, now: Date): Promise<SyncSummary> {
   const source = await getSourceRow(ctx, key);

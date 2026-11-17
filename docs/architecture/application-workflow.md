@@ -34,15 +34,32 @@ so any stage can be retried or run manually without the others.
 | `failed` | submission service | Failed after retries or needs human intervention |
 | `interview` / `assessment` / `rejected` / `withdrawn` | user | Post-submission tracking |
 
-Allowed transitions will be enforced in one state-machine module (Phase 6) and every transition writes an
-`application_events` row.
+Allowed transitions are enforced in one place: `application_transition_allowed` in
+`supabase/migrations/20261118000000_application_queue.sql`, applied by a trigger to every writer (user functions,
+service role, workers). Every status change writes an `application_events` row.
 
-## Submission sequence (Phase 6–7)
+| From | To |
+| --- | --- |
+| discovered, qualified | analyzing, qualified/discovered, archived, drafting, pending_approval, applied (applied elsewhere) |
+| analyzing | discovered, qualified, archived |
+| archived | discovered |
+| drafting | archived, pending_approval, applied |
+| pending_approval | archived, approved, scheduled, applied |
+| approved, scheduled | pending_approval, scheduled/approved, applying, applied, withdrawn |
+| applying | approved, scheduled, failed, applied (worker only) |
+| failed | pending_approval, approved, scheduled, applied, withdrawn |
+| applied | interview, assessment, rejected, withdrawn |
+| interview, assessment | assessment/interview, rejected, withdrawn |
 
-1. Scheduler picks `approved`/`scheduled` applications ordered by `priority desc, created_at`.
-2. For each: load settings → `evaluateSubmissionWindow(now)`; closed → set `scheduled_for = nextWindowStart`.
-3. Count today's submissions (`localDayBounds`) against `daily_application_limit`.
-4. Claim atomically (DB function: set `lock_token`, `locked_at`, status `applying` where unlocked and still approved/scheduled).
+Changing a document, screening answer or the resume of an approved, scheduled or failed application returns it to
+`pending_approval`; while `applying` those edits are refused.
+
+## Submission sequence (Phase 6 contract, Phase 7 worker)
+
+1. Approval (Phase 6): `approveApplicationAction` evaluates the window with server time; open → `approved` (due now), closed → `scheduled` with `scheduled_for = nextWindowStart` (`submitAfter` in `src/features/applications/queue.ts`).
+2. Worker (Phase 7): load settings → `evaluateSubmissionWindow(now)`; closed → wait.
+3. `claim_next_application(user, localDayBounds(now))` checks pause, enabled and the daily limit, then claims the next due application (`priority desc, created_at`) atomically with a lock token and a run row.
+4. The Applications page shows the same decision per row with `queueState` (due / waiting until / daily limit / paused / automation off).
 5. Run automation up to the final submit; **re-run step 2 and the pause check immediately before clicking submit**.
 6. Verify the confirmation (page text/URL/email) → set `submitted_at`, `submission_verified_at`, status `applied`.
 7. Any doubt → status `failed` with reason, notification, screenshots; never `applied`.

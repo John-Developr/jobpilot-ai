@@ -208,15 +208,19 @@ type JobRow = OwnedRow & {
   discovered_at: string;
 };
 
-/** Columns of `applications` the app reads so far (Phase 6 adds the rest). */
+/** Columns of `applications` the app reads (locks and idempotency keys are worker-only). */
 type ApplicationRow = OwnedRow & {
   job_id: string;
   status: Enums["application_status"];
   priority: number;
   resume_id: string | null;
   match_score: number | null;
+  approved_at: string | null;
+  scheduled_for: string | null;
   submitted_at: string | null;
   submission_method: Enums["submission_method"] | null;
+  attempt_count: number;
+  last_error: string | null;
   notes: string | null;
 };
 
@@ -429,6 +433,12 @@ export type Database = {
         Args: { p_job_id: string; p_archived: boolean };
         Returns: Enums["application_status"];
       };
+      approve_application: {
+        Args: { p_application_id: string; p_submit_after: string | null };
+        Returns: Enums["application_status"];
+      };
+      withdraw_approval: { Args: { p_application_id: string }; Returns: Enums["application_status"] };
+      mark_application_submitted: { Args: { p_application_id: string }; Returns: Enums["application_status"] };
     };
     Enums: Enums;
     CompositeTypes: { [_ in never]: never };

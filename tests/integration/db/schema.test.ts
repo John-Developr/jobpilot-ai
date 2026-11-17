@@ -174,7 +174,7 @@ describe("column guards", () => {
     await db.query("insert into public.applications (user_id, job_id) values ($1, $2)", [alice, jobId]);
     const result = await asUser(db, alice, () =>
       db.query<{ notes: string }>(
-        "update public.applications set notes = 'Followed up', status = 'interview' where job_id = $1 returning notes",
+        "update public.applications set notes = 'Followed up', priority = 80 where job_id = $1 returning notes",
         [jobId],
       ),
     );

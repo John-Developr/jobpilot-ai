@@ -1,6 +1,6 @@
 # ADR-003: Automation engine and submission safety
 
-- **Status:** Accepted (2026-11-17) — implementation Phase 6–7
+- **Status:** Accepted (2026-11-17) — Phase 6 implemented (state machine, approval, claim contract); worker Phase 7
 
 ## Context
 
@@ -22,6 +22,16 @@ violations and false "applied" states all hurt the user. Browser automation is l
    `needs_attention` and screenshots. No CAPTCHA solving, no stealth/evasion plugins.
 7. **Verification required** before `applied` (confirmation page/URL/email evidence stored in the run log);
    enforced by a DB check constraint for `submission_method = 'automation'`.
+
+## Amendment (2026-11-17, Phase 6)
+
+- Trigger.dev is set up in Phase 7 with the Playwright worker, not in Phase 6: without a worker nothing would run a
+  claimed application. Phase 6 ships the database contract the worker will call.
+- The atomic claim is `claim_next_application` (service role only). The window stays in the app: the caller passes the
+  local day bounds and re-checks `evaluateSubmissionWindow` and the pause flag right before the final click.
+- `fail_application_attempt(retryable => true)` is allowed only when the run stopped **before** the final click. A claim
+  older than 60 minutes may have crashed after it, so it fails for review instead of retrying (no double submission).
+- Approval covers the exact content: changing a document, a screening answer or the resume withdraws it.
 
 ## Alternatives
 

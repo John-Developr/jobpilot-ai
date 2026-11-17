@@ -42,7 +42,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Jobs", href: "/jobs", icon: BriefcaseBusiness },
       { label: "Application Studio", href: "/application-studio", icon: PenLine },
-      { label: "Applications", href: "/applications", icon: ListChecks, plannedPhase: 6 },
+      { label: "Applications", href: "/applications", icon: ListChecks },
       { label: "Automation", href: "/automation", icon: Bot, plannedPhase: 7 },
     ],
   },

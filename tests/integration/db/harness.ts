@@ -74,6 +74,17 @@ export async function createUser(db: PGlite, email: string): Promise<string> {
   return row.id;
 }
 
+/**
+ * Runs a setup statement with triggers disabled, so a test can put an application into
+ * any status without walking the state machine. Check constraints still apply.
+ */
+export async function forceState(db: PGlite, sql: string, params: unknown[] = []): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.exec("set local session_replication_role = replica");
+    await tx.query(sql, params);
+  });
+}
+
 /** Runs `fn` as the `authenticated` role with the given user's JWT subject. */
 export async function asUser<T>(db: PGlite, userId: string, fn: () => Promise<T>): Promise<T> {
   if (!/^[0-9a-f-]{36}$/.test(userId)) throw new Error(`Invalid user id: ${userId}`);

@@ -14,6 +14,8 @@ You are the frontend engineer for JobPilot AI. Load the `frontend-development` s
 - Every data view ships loading, empty and error states. No placeholder data, no buttons without behavior.
 - Accessibility: labelled inputs, visible focus rings, `aria-invalid` on errors, keyboard reachable menus, AA contrast, respects reduced motion.
 - Check 390px, 768px and 1280px widths.
+- Loading and progress UI reflect real state; never fake steps or timers that pretend work happened.
+- Dates use the user's timezone (`formatDate`/`formatDateTime`), never the browser default.
 
 ## Done when
 

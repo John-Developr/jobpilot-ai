@@ -76,6 +76,18 @@ All return `ActionResult<null>`. Update actions take `{ id: uuid, values }` wher
 
 Pages: `/application-studio`, `/application-studio/[id]`, `/print/applications/[id]?kind=&version=` (print-only view).
 
+### Applications — `features/applications/server/actions.ts`
+
+All take `{ applicationId: uuid }` and return `ActionResult<application_status>`.
+
+| Action | Notes |
+| --- | --- |
+| `approveApplicationAction` | Evaluates the submission window with server time: open → `approved`, closed → `scheduled` until the next window. Needs verified answers and a resume |
+| `withdrawApprovalAction` | approved / scheduled / failed → pending_approval |
+| `markAppliedAction` | Manual submission → `applied` (`submission_method = manual`, now) |
+
+Page: `/applications`.
+
 ### Ask JobPilot — `features/assistant/server/actions.ts`
 
 | Action | Input | Notes |
@@ -102,4 +114,4 @@ None of these refresh the current route. Questions go to `POST /api/assistant/me
 | `/resumes/[id]/file` | GET | Required | 302 to a 60-second signed download URL; 404 if missing/not owned |
 | `/api/assistant/messages` | POST | Required; same-origin only (403 otherwise) | Body `{ threadId or null, message ≤ 4000, page }`. 400 on invalid input. Streams NDJSON events: `thinking {step}`, `tools {names}`, `text {delta}`, then `done {threadId, messages}` or `error {message}`. Question and answer are saved together only after the answer completes. |
 
-Planned: `/api/trigger/*` webhooks (Phase 6), `/api/exports/[documentId]` (Phase 5), `/api/health` (Phase 9).
+Planned: `/api/trigger/*` webhooks (Phase 7), `/api/exports/[documentId]` (Phase 5), `/api/health` (Phase 9).

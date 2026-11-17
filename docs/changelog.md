@@ -7,6 +7,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Added
 
+- **Approval and submission queue (Phase 6).** New Applications page (`/applications`): approve prepared applications,
+  see the queue in submission order with each row's state (due now, due at the next window, daily limit reached, paused),
+  withdraw an approval, mark an application as applied after submitting it yourself, review failed submissions, and an
+  activity log of every status change. Studio shows **Approve** once an application is ready.
+- **Application state machine.** One allowed-transition graph enforced by a trigger for every writer. Status and approval
+  columns change only through SQL functions (`approve_application`, `withdraw_approval`, `mark_application_submitted`).
+  Approval needs verified screening answers and a resume, and is withdrawn automatically when a document, answer or the
+  resume changes afterwards.
+- **Submission worker contract** for the Phase 7 worker (service role only): `claim_next_application` (per-user lock,
+  pause and daily-limit checks, lock token, idempotency key, run row), `release_application_claim`,
+  `fail_application_attempt` (retry with backoff only before the final click), `complete_application_submission`
+  (requires verification evidence). Stale claims fail instead of retrying, so a crashed run can never submit twice.
+
 - **AI key and model failover.** Several Gemini keys (`GEMINI_API_KEY`, `GEMINI_API_KEY2`, …) are used in order; a key
   that hits its rate/quota limit or is rejected is parked and the next one is used. Models fall back too
   (`gemini-2.5-flash` → `gemini-3-flash-preview` → `gemini-3.5-flash-lite`; `AI_MODEL` accepts a list), covering
@@ -17,6 +30,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Changed
 
+- Trigger.dev, scheduled discovery and the background scheduler move from Phase 6 to Phase 7, together with the
+  Playwright worker that needs them. ADR-003 amended.
+- Users can no longer set application statuses directly; existing status-changing functions now run as security definer.
+
+- README rewritten for the current feature set, environment and AI failover; AGENTS.md, Claude agents and skills updated with the module map, AI rules (Chat Completions, failover, Gemini quirks, read-only assistant tools), streaming Route Handler pattern and test patterns.
 - **Ask JobPilot redesign.** Modern chat layout (avatar, message bubbles, formatted lists and bold, copy button, tool
   chips, suggestion cards, rounded composer, conversation history with times). Answers stream: the panel shows the real
   steps (Reading your question → Searching jobs, overview… → Reviewing what I found → Writing answer) as the server

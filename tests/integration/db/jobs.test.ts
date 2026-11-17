@@ -1,6 +1,6 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
-import { asUser, createMigratedDatabase, createUser } from "./harness";
+import { asUser, createMigratedDatabase, createUser, forceState } from "./harness";
 
 let db: PGlite;
 let alice: string;
@@ -148,7 +148,7 @@ describe("set_job_archived", () => {
 
   it("refuses to archive a submitted application", async () => {
     const id = await jobId("hash-5");
-    await db.query("update public.applications set status = 'applied', submission_method = 'manual' where job_id = $1", [id]);
+    await forceState(db, "update public.applications set status = 'applied', submission_method = 'manual' where job_id = $1", [id]);
     await expect(archive(id, true)).rejects.toThrow(/cannot archive/);
   });
 

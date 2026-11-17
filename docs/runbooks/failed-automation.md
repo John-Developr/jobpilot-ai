@@ -1,6 +1,6 @@
 # Failed automation
 
-Status: applies from Phase 6–7. Until then no automation runs.
+Status: applies from Phase 7. Until then no automation runs; failed applications only appear if set by the worker contract.
 
 ## First response
 

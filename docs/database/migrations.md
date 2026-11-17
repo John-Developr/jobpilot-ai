@@ -31,6 +31,7 @@ Production pushes require a confirmed backup (see deployment/backup-recovery.md)
 
 | Migration | Summary |
 | --- | --- |
+| `20261118000000_application_queue` | Status transition graph + guard trigger; claim/approval check constraints; status columns revoked from users; status functions → security definer; approval-withdrawal triggers on documents, answers, resume; `approve_application`, `withdraw_approval`, `mark_application_submitted`; service-role worker contract (`claim_next_application`, `release_application_claim`, `fail_application_attempt`, `complete_application_submission`) |
 | `20261117000001_initial_schema` | Enums, all core tables, indexes, constraints, `updated_at` triggers, new-user bootstrap trigger, RLS policies, column grants, anon revoke |
 | `20261117000002_storage` | Private `documents` and `automation` buckets with owner-folder policies |
 | `20261117120000_set_default_resume` | `set_default_resume(uuid)` — atomically moves the default resume (security invoker, authenticated only) |

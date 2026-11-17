@@ -65,7 +65,7 @@ export function MarkReadyButton({ applicationId, flaggedSections }: { applicatio
     startTransition(async () => {
       const result = await markReadyAction({ applicationId, confirmFlags });
       setConfirming(false);
-      if (result.ok) toast.success("Ready for approval. Approval and scheduling arrive in the next phase.");
+      if (result.ok) toast.success("Ready for approval. Approve it here or on the Applications page.");
       else toast.error(result.error);
     });
 

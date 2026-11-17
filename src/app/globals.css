@@ -1,0 +1,279 @@
+/*
+ * JobPilot AI design tokens.
+ * Single source of truth for color, type, radius, shadow and motion.
+ * Derived from the portfolio reference (johncarlo-portfolio.vercel.app).
+ * See docs/design/design-system.md before adding or changing a token.
+ * Components must use these tokens (via Tailwind utilities) — never raw hex values.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Surfaces */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Actions and brand */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-text: var(--brand-text);
+  --color-brand-soft: var(--brand-soft);
+
+  /* Feedback states */
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar (navigation) */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Skeleton */
+  --color-skeleton: var(--skeleton);
+  --color-skeleton-shine: var(--skeleton-shine);
+
+  /* Typography — Karla matches the portfolio. */
+  --font-sans: var(--font-karla), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-karla), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  --text-2xs: 0.6875rem; /* 11px — meta labels, timestamps */
+  --text-2xs--line-height: 1rem;
+  --text-prose: 0.9375rem; /* 15px — long-form reading text (portfolio body size) */
+  --text-prose--line-height: 1.6;
+
+  /* Radius — 8px base: buttons/inputs 8px, cards ~11px, badges ~6px. */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Elevation */
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-overlay: var(--shadow-overlay);
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* Light theme — portfolio default: neutral gray canvas, white surfaces, charcoal actions. */
+:root {
+  --radius: 0.5rem;
+
+  --background: #f2f2f2;
+  --foreground: #282a36;
+  --card: #ffffff;
+  --card-foreground: #282a36;
+  --popover: #ffffff;
+  --popover-foreground: #282a36;
+  --muted: #f5f5f5;
+  --muted-foreground: #5c636d;
+  --subtle-foreground: #7d8590;
+  --secondary: #f0f0f0;
+  --secondary-foreground: #282a36;
+  --accent: #ebebeb;
+  --accent-foreground: #282a36;
+  --border: #e5e5e5;
+  --input: #e1e1e1;
+  --ring: #476fff;
+
+  --primary: #282a36;
+  --primary-foreground: #ffffff;
+  --brand: #476fff;
+  --brand-foreground: #ffffff;
+  --brand-text: #3b5ff5;
+  --brand-soft: rgb(71 111 255 / 0.1);
+
+  --destructive: #c2332f;
+  --destructive-soft: rgb(194 51 47 / 0.1);
+  --success: #1a7f4b;
+  --success-soft: rgb(26 127 75 / 0.1);
+  --warning: #b45309;
+  --warning-soft: rgb(180 83 9 / 0.1);
+  --info: #3b5ff5;
+  --info-soft: rgb(71 111 255 / 0.1);
+
+  --chart-1: #476fff;
+  --chart-2: #282a36;
+  --chart-3: #1a7f4b;
+  --chart-4: #b45309;
+  --chart-5: #c2332f;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #282a36;
+  --sidebar-primary: #282a36;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f2f2f2;
+  --sidebar-accent-foreground: #282a36;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #476fff;
+
+  --skeleton: #f1f1f1;
+  --skeleton-shine: #e4e4e4;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-raised: 0 4px 20px -4px rgb(0 0 0 / 0.08);
+  --shadow-overlay: 0 12px 32px -8px rgb(0 0 0 / 0.18);
+}
+
+/* Dark theme — portfolio dark: GitHub-like canvas with brand blue as the action color. */
+.dark {
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --card: #161b22;
+  --card-foreground: #e6edf3;
+  --popover: #161b22;
+  --popover-foreground: #e6edf3;
+  --muted: #1c2128;
+  --muted-foreground: #8b949e;
+  --subtle-foreground: #7d8590;
+  --secondary: #21262d;
+  --secondary-foreground: #e6edf3;
+  --accent: #262c36;
+  --accent-foreground: #e6edf3;
+  --border: #30363d;
+  --input: #30363d;
+  --ring: #476fff;
+
+  --primary: #3b5ff5;
+  --primary-foreground: #ffffff;
+  --brand: #476fff;
+  --brand-foreground: #ffffff;
+  --brand-text: #7a96ff;
+  --brand-soft: rgb(71 111 255 / 0.14);
+
+  --destructive: #f85149;
+  --destructive-soft: rgb(248 81 73 / 0.14);
+  --success: #3fb950;
+  --success-soft: rgb(63 185 80 / 0.14);
+  --warning: #d29922;
+  --warning-soft: rgb(210 153 34 / 0.14);
+  --info: #7a96ff;
+  --info-soft: rgb(71 111 255 / 0.14);
+
+  --chart-1: #476fff;
+  --chart-2: #8b949e;
+  --chart-3: #3fb950;
+  --chart-4: #d29922;
+  --chart-5: #f85149;
+
+  --sidebar: #161b22;
+  --sidebar-foreground: #e6edf3;
+  --sidebar-primary: #3b5ff5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #21262d;
+  --sidebar-accent-foreground: #e6edf3;
+  --sidebar-border: #30363d;
+  --sidebar-ring: #476fff;
+
+  --skeleton: #1e2330;
+  --skeleton-shine: #252b3b;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-raised: 0 4px 20px -4px rgb(0 0 0 / 0.5);
+  --shadow-overlay: 0 12px 32px -8px rgb(0 0 0 / 0.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    transition:
+      background-color 0.2s ease,
+      color 0.3s ease;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading tracking-tight text-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Animated text for "in progress" labels (AI steps). Uses theme tokens; respects reduced motion above. */
+@utility text-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--foreground) 45%,
+    var(--muted-foreground) 90%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: var(--animate-shimmer);
+}

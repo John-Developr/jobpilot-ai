@@ -60,6 +60,16 @@ export function aiModelOverrides(): string[] | null {
 }
 
 /**
+ * Secret key for background workers (bypasses RLS). Only `src/lib/supabase/service.ts` reads
+ * it, and only worker code (`src/trigger/**`) may import that module (lint-enforced).
+ */
+export function supabaseSecretKey(): string {
+  const key = process.env.SUPABASE_SECRET_KEY?.trim();
+  if (!key) throw new Error("SUPABASE_SECRET_KEY is not set. See docs/deployment/environment-variables.md.");
+  return key;
+}
+
+/**
  * Only the least-privilege `jobpilot_reader` role is accepted (optionally suffixed with
  * the project ref for the Supabase pooler). Admin logins such as `postgres` are refused
  * so JobPilot can never hold write access to the portfolio.

@@ -8,8 +8,8 @@ Claude Code–specific workflow on top of this file.
 
 Implemented: auth and app shell, settings and submission-window engine, profile and resumes, read-only portfolio
 sync, job discovery (Remote OK, Greenhouse, Lever, Ashby, manual), AI evaluation, Application Studio, the
-Ask JobPilot assistant, and the Phase 6 approval queue (state machine, approval, worker claim contract). Planned:
-Phase 7 background worker (Trigger.dev) and browser automation (Playwright), Phase 8 analytics/notifications/monitoring, Phase 9 hardening. Source of truth:
+Ask JobPilot assistant, the Phase 6 approval queue, and Phase 7 slice 1 (Trigger.dev worker: scheduled discovery,
+submission scheduler; not deployed, no site adapter yet). Planned: site adapters (Playwright, dry run first), Phase 8 analytics/notifications/monitoring, Phase 9 hardening. Source of truth:
 `docs/development-roadmap.md`.
 
 | Feature module | Owns |
@@ -20,6 +20,7 @@ Phase 7 background worker (Trigger.dev) and browser automation (Playwright), Pha
 | `evaluation` | Scoring math (`scoring.ts`), `loadCandidateContext` (the only loader of profile facts for AI) |
 | `studio` | Versioned documents, screening answers, grounding check, ready-for-approval gate |
 | `applications` | Approval, queue state (`queue.ts`), manual submission, activity; status changes only via SQL functions (`approve_application`, …) |
+| `automation` | Worker logic (`server/discovery-worker.ts`, `server/submission-worker.ts`), worker data access, site adapter registry (`adapters.ts`), run history. Tasks in `src/trigger/` are thin wrappers; only they may import `@/lib/supabase/service` |
 | `assistant` | Ask JobPilot: read-only tools, threads/messages, streaming endpoint |
 | `dashboard` | Read-only summary cards |
 

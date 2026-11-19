@@ -33,6 +33,15 @@ violations and false "applied" states all hurt the user. Browser automation is l
   older than 60 minutes may have crashed after it, so it fails for review instead of retrying (no double submission).
 - Approval covers the exact content: changing a document, a screening answer or the resume withdraws it.
 
+## Amendment (2026-11-18, Phase 7 slice 1)
+
+- Trigger.dev tasks: `discover-jobs`, `schedule-submissions`, `submit-application` (max 15 min, below the 60-min
+  stale-claim limit, so a live run is never cleared before it can record its result).
+- The final-click gate is `confirmFinalSubmit`, which re-reads `automation_settings` from the database and evaluates
+  the window with server time; adapters must call it, then `markFinalClick()`, immediately before clicking.
+- Each adapter's dry-run flag is fixed in code, never taken from a task payload. A dry run ends as Needs attention.
+- Only `src/trigger/**` may import the secret-key client (ESLint `no-restricted-imports`).
+
 ## Alternatives
 
 - Browser extension running in the user's own browser: better for sites that block headless browsers, but

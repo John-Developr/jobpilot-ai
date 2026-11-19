@@ -104,7 +104,7 @@ function toIngestRow(job: NormalizedJob) {
 }
 
 export async function ingestJobs(
-  { supabase }: AuthenticatedContext,
+  { supabase, userId }: AuthenticatedContext,
   sourceId: string,
   jobs: NormalizedJob[],
 ): Promise<{ inserted: number; skipped: number }> {
@@ -112,6 +112,8 @@ export async function ingestJobs(
   const { data, error } = await supabase.rpc("ingest_jobs", {
     p_source_id: sourceId,
     p_jobs: jobs.map(toIngestRow),
+    // Honoured only for the worker's service role; signed-in users always act as themselves.
+    p_user_id: userId,
   });
   if (error) throw new RepositoryError("Failed to ingest jobs", { cause: error });
   const row = data[0];

@@ -7,8 +7,9 @@ answers questions about your search. Automated submission inside your working ho
 Human approval is always required. JobPilot never invents experience, never bypasses CAPTCHAs or logins, and only
 counts an application as submitted when the submission is verified.
 
-> **Status:** Phases 1–6 and the Ask JobPilot assistant are implemented. Background worker and browser automation
-> (Phase 7), analytics and notifications (Phase 8) are planned.
+> **Status:** Phases 1–6 and the Ask JobPilot assistant are implemented. Phase 7 is in progress: the Trigger.dev
+> worker (scheduled discovery, submission scheduler) is written but not deployed, and no site adapter exists yet.
+> Analytics and notifications (Phase 8) are planned.
 > Details: [docs/development-roadmap.md](docs/development-roadmap.md) · changes: [docs/changelog.md](docs/changelog.md).
 
 ## Features
@@ -23,6 +24,7 @@ counts an application as submitted when the submission is verified.
 | AI evaluation | Per-criterion match scores (skills, experience, responsibilities by AI; remote, salary, type by code), weighted overall score, qualification level, matched/missing skills | `/jobs/[id]` |
 | Application Studio | Cover letter, email, resume summary, skills emphasis and recruiter message — generated or written, versioned and restorable; screening answers that start unverified; grounding check that flags unsupported skills and numbers; export to copy, `.md`, `.txt`, print/PDF | `/application-studio` |
 | Applications | Approve prepared applications; queue in submission order (priority, window, daily limit) with each row's state; withdraw approval; mark as applied after submitting yourself; failed submissions; activity log of every status change | `/applications` |
+| Automation | History of background runs (scheduled discovery every 6 h, submissions); worker in `src/trigger/` — see [background-processing.md](docs/architecture/background-processing.md) | `/automation` |
 | Ask JobPilot | Read-only chat docked on the right of every page. Answers from your own data (jobs, scores, applications, activity, AI usage, profile) through fixed tools, streams its steps and answer, saves conversations | every app page |
 
 ## Stack

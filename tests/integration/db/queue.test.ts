@@ -76,7 +76,8 @@ const dayBounds = () => {
 const claim = (userId: string) =>
   asService(() =>
     db.query<{ application_id: string; lock_token: string; run_id: string; attempt: number }>(
-      "select * from public.claim_next_application($1, $2, $3)",
+      // Every application of the user is a candidate (as if every site had an adapter).
+      "select * from public.claim_next_application($1, $2, $3, (select array_agg(id) from public.applications where user_id = $1))",
       [userId, ...dayBounds()],
     ),
   ).then((r) => r.rows[0]);
@@ -229,7 +230,7 @@ describe("submission worker contract", () => {
   it("is not callable by signed-in users", async () => {
     await expect(
       asUser(db, alice, () =>
-        db.query("select * from public.claim_next_application($1, $2, $3)", [alice, ...dayBounds()]),
+        db.query("select * from public.claim_next_application($1, $2, $3, '{}')", [alice, ...dayBounds()]),
       ),
     ).rejects.toThrow(/permission denied/);
   });

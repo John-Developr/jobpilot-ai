@@ -119,9 +119,20 @@ Original scope: Trigger.dev setup; application state machine and events; approva
 the submission window; daily limit; claim function with lock + idempotency key; safe retry with backoff; execution
 history.
 
-## Phase 7 — Background worker and browser automation
+## Phase 7 — Background worker and browser automation (in progress)
 
-Trigger.dev setup (`SUPABASE_SECRET_KEY`, `TRIGGER_SECRET_KEY`); scheduled discovery; scheduler task calling
+| Item | Status |
+| --- | --- |
+| Trigger.dev setup (`trigger.config.ts`, `pnpm trigger:dev` / `trigger:deploy`) | Done — not yet run (needs a Trigger.dev project and keys) |
+| Secret-key worker client, lint-restricted to `src/trigger/**` | Done — lint-verified |
+| `ingest_jobs` for workers (user id honoured for the service role only) | Done — DB-tested |
+| Scheduled discovery every 6 h with one `automation_runs` row per source and tick | Done — unit-tested with mocks |
+| Submission scheduler (window, pause, daily limit, adapter filter) and run task (re-check before the final click, outcome → complete / release / fail) | Done — unit-tested with a fake adapter; no real adapter |
+| Automation page (`/automation`): run history | Done — build-verified |
+| First site adapter (Playwright, dry run first) | Not started — needs the site chosen after its terms are checked |
+| Automatic scoring of discovered jobs | Not started — needs a worker path for evaluation |
+
+Original scope: Trigger.dev setup (`SUPABASE_SECRET_KEY`, `TRIGGER_SECRET_KEY`); scheduled discovery; scheduler task calling
 `claim_next_application` → `release_application_claim` / `fail_application_attempt` / `complete_application_submission`;
 `automation_runs` for syncs; Playwright worker in isolated contexts; supported-flow adapters (start with public ATS forms that permit it);
 field mapping from verified data; uploads; screenshots; human-intervention stops (CAPTCHA, login, unknown or
@@ -164,7 +175,7 @@ documentation review.
 | Item | Plan |
 | --- | --- |
 | Hand-written DB types | Replace with generated types once the Supabase CLI is logged in and linked |
-| Automation run records for syncs | Syncs record status on `job_sources`; `automation_runs` rows come with workers (Phase 7) |
+| Automation run records for syncs | Scheduled syncs write `automation_runs`; manual "Sync now" still records only on `job_sources` |
 | Portfolio project dates | Portfolio stores a free-text period; JobPilot project dates stay manual |
 | Profile item ordering | Lists sort by date; manual ordering (`sort_order`) has no UI yet |
 | No e2e tests | Add Playwright smoke tests against a Supabase test project (carried over to Phase 3) |

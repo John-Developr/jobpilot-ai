@@ -49,6 +49,8 @@ type Enums = {
     | "skills_emphasis";
   answer_source: "profile" | "ai" | "user";
   event_actor: "user" | "system" | "automation";
+  run_kind: "discovery" | "analysis" | "generation" | "submission" | "maintenance";
+  run_status: "queued" | "running" | "succeeded" | "failed" | "needs_attention" | "cancelled";
   assistant_role: "user" | "assistant";
   skill_category:
     | "language"
@@ -346,6 +348,26 @@ type ApplicationEventRow = {
   created_at: string;
 };
 
+/** Written by background workers (service role); owners read their own runs. */
+type AutomationRunRow = {
+  id: string;
+  user_id: string;
+  kind: Enums["run_kind"];
+  status: Enums["run_status"];
+  application_id: string | null;
+  job_source_id: string | null;
+  external_run_id: string | null;
+  idempotency_key: string | null;
+  attempt: number;
+  started_at: string | null;
+  finished_at: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  log: Json;
+  screenshot_paths: string[];
+  created_at: string;
+};
+
 type AssistantThreadRow = OwnedRow & { title: string };
 
 type AssistantMessageRow = {
@@ -393,6 +415,7 @@ export type Database = {
       job_requirements: Table<JobRequirementRow, "user_id" | "job_id" | "kind" | "description">;
       ai_usage_events: Table<AiUsageEventRow, "user_id" | "operation" | "model" | "succeeded">;
       application_events: Table<ApplicationEventRow, "user_id" | "application_id" | "event_type" | "actor">;
+      automation_runs: Table<AutomationRunRow, "user_id" | "kind">;
       assistant_threads: Table<AssistantThreadRow, "user_id" | "title">;
       assistant_messages: Table<AssistantMessageRow, "user_id" | "thread_id" | "role" | "content">;
       application_documents: Table<ApplicationDocumentRow, "user_id" | "application_id" | "kind" | "content">;
@@ -426,7 +449,7 @@ export type Database = {
         Returns: Enums["application_status"];
       };
       ingest_jobs: {
-        Args: { p_source_id: string | null; p_jobs: Json };
+        Args: { p_source_id: string | null; p_jobs: Json; p_user_id?: string | null };
         Returns: { inserted_count: number; skipped_count: number }[];
       };
       set_job_archived: {
@@ -439,6 +462,29 @@ export type Database = {
       };
       withdraw_approval: { Args: { p_application_id: string }; Returns: Enums["application_status"] };
       mark_application_submitted: { Args: { p_application_id: string }; Returns: Enums["application_status"] };
+      // Worker contract (service role only).
+      claim_next_application: {
+        Args: { p_user_id: string; p_day_start: string; p_day_end: string; p_candidates: string[] };
+        Returns: { application_id: string; lock_token: string; run_id: string; attempt: number }[];
+      };
+      release_application_claim: {
+        Args: { p_application_id: string; p_lock_token: string; p_submit_after: string | null; p_reason: string };
+        Returns: Enums["application_status"];
+      };
+      fail_application_attempt: {
+        Args: {
+          p_application_id: string;
+          p_lock_token: string;
+          p_error_code: string;
+          p_error_message: string;
+          p_retryable: boolean;
+        };
+        Returns: Enums["application_status"];
+      };
+      complete_application_submission: {
+        Args: { p_application_id: string; p_lock_token: string; p_evidence: Json };
+        Returns: Enums["application_status"];
+      };
     };
     Enums: Enums;
     CompositeTypes: { [_ in never]: never };

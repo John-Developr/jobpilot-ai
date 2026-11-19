@@ -24,5 +24,5 @@
 ## Logs
 
 - Vercel: function logs, JSON lines with `event` names (`settings.*`, `automation.*`).
-- Trigger.dev (Phase 6): per-run logs, linked from `automation_runs.external_run_id`.
+- Trigger.dev (Phase 7): per-run logs, linked from `automation_runs.external_run_id`.
 - Sentry (Phase 8): exceptions.

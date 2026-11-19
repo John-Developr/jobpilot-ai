@@ -13,6 +13,7 @@ import { getJob } from "@/features/jobs/server/job-repository";
 import { ScoreBadge } from "@/features/evaluation/components/score-badge";
 import { listResumes } from "@/features/resumes/server/resume-repository";
 import { getAutomationSettings } from "@/features/settings/server/automation-settings-repository";
+import { ApproveButton } from "@/features/applications/components/queue-actions";
 import { AnswersPanel } from "@/features/studio/components/answers-panel";
 import { DocumentEditor } from "@/features/studio/components/document-editor";
 import { MarkReadyButton, ResumePicker } from "@/features/studio/components/workspace-controls";
@@ -44,6 +45,7 @@ export default async function StudioWorkspacePage({ params }: PageProps<"/applic
     (kind) => DOCUMENT_CONFIG[kind].label,
   );
   const canMarkReady = ["discovered", "qualified", "drafting"].includes(application.status);
+  const inQueue = ["approved", "scheduled", "applying", "failed"].includes(application.status);
 
   return (
     <>
@@ -74,6 +76,12 @@ export default async function StudioWorkspacePage({ params }: PageProps<"/applic
             resumes={resumes.map((r) => ({ id: r.id, name: r.name, isDefault: r.isDefault }))}
           />
           {canMarkReady ? <MarkReadyButton applicationId={id} flaggedSections={flaggedSections} /> : null}
+          {application.status === "pending_approval" ? <ApproveButton applicationId={id} /> : null}
+          {inQueue ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href="/applications">View in queue</Link>
+            </Button>
+          ) : null}
         </div>
       </header>
 

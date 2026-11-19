@@ -25,8 +25,16 @@ description: How to test JobPilot AI — Vitest unit tests, PGlite migration/RLS
 - Scheduling: start inclusive, end exclusive, weekends, next-window rollover, mid-task cutoff, timezone, DST, pause, disabled.
 - Data integrity: dedupe, one application per job, cross-user FK rejection, verified-submission check.
 - Authorization: RLS isolation, column grants, anon denied.
-- AI: schema-invalid output rejected; hallucinated skills flagged (Phase 4+).
+- AI: schema-invalid output rejected; grounding flags unsupported skills and numbers; tool rounds, invalid tool arguments, step limit, streamed chunks; key/model failover (429, rejected key, 404, 503) and "all keys parked".
+- Assistant: tools are read-only and scoped to the user; progress steps follow real events; NDJSON parsing.
 - Automation: CAPTCHA/login/changed-page → `needs_attention`, never `applied` (Phase 7+).
+
+## Patterns
+
+- **DB tests:** `createMigratedDatabase()`, `createUser(db, email)`, `asUser(db, userId, fn)` from `tests/integration/db/harness.ts`. Assert that other users see nothing and that forbidden writes fail with `permission denied`.
+- **AI tests:** mock `openai` (a class whose `chat.completions.create` is a `vi.fn()`) and `@/config/server-env` (`aiCredentials`, `aiModelOverrides`, `AI_KEY_VARIABLE`); stream responses with an async generator. See `tests/unit/assistant/run-conversation.test.ts`. Use fresh key values per test so parked keys do not leak.
+- **server-only modules:** `vi.mock("server-only", () => ({}))` before importing.
+- **Env in tests:** Vitest does not load `.env.local`. Committed tests never call real providers; for a one-off live check, run a temporary test with `(set -a; . ./.env.local; set +a; pnpm exec vitest run <file>)`, then delete it and never print keys.
 
 ## Commands
 

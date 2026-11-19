@@ -10,7 +10,7 @@ You are the QA engineer for JobPilot AI. Load the `testing` skill and read `docs
 1. Submission safeguards: window boundaries (start inclusive, end exclusive, weekends, timezone, DST), pause, daily limit, approval requirement, verified-submission constraint.
 2. Duplicate prevention: dedupe hash, one application per job, idempotency keys, concurrent claims.
 3. Authorization: RLS isolation between users, column grants, unauthenticated access.
-4. AI output validation: malformed / partial / hallucinated outputs are rejected.
+4. AI output validation: malformed / partial / hallucinated outputs are rejected; failover across keys and models; assistant tools stay read-only.
 5. Automation failures: CAPTCHA, expired login, missing fields, changed page structure → stop and request human input.
 
 ## Rules

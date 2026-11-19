@@ -22,7 +22,7 @@
 ## Planned
 
 - Content Security Policy with nonces (Phase 9).
-- Secret-key Supabase client confined to worker code (Phase 6).
+- Secret-key Supabase client confined to worker code (Phase 7).
 - Supabase Vault for automation credentials (Phase 7).
 - MFA (TOTP) for the owner account (Phase 9).
 - Dependency audit in CI (`pnpm audit`) (Phase 9).

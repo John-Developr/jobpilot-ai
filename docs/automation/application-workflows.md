@@ -1,6 +1,6 @@
 # Application workflows
 
-Status: Preparation **implemented (Phase 5)**; approval, scheduling and submission **planned (Phase 6–7)**.
+Status: Preparation **implemented (Phase 5)**; approval, queue and manual submission **implemented (Phase 6)**; automated submission **planned (Phase 7)**.
 
 ## Preparation (Application Studio)
 
@@ -9,7 +9,8 @@ Status: Preparation **implemented (Phase 5)**; approval, scheduling and submissi
 2. Each section can be regenerated alone; every save creates a new `application_documents.version`.
 3. Grounding check flags unsupported claims; the user edits until clean.
 4. Answers sourced from AI start `is_verified = false`; the user verifies each one.
-5. Approve → status `approved`, `approved_at` set, `application_events` row written.
+5. Mark ready → `pending_approval`. Approve (Studio or `/applications`) → `approved` (window open) or `scheduled` until the next window, `approved_at` set, resume pinned, event written. Needs verified answers and a resume.
+6. Editing a document, answer or the resume afterwards withdraws the approval (`pending_approval`).
 
 ## Submission
 

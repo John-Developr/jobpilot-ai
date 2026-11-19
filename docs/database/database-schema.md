@@ -44,7 +44,7 @@ failed, needs_attention, cancelled) · `event_actor` (user, system, automation) 
 
 | Table | Key columns | Constraints / indexes | RLS |
 | --- | --- | --- | --- |
-| `applications` | job_id, status, priority 0–100, resume_id, match_score, approved_at, scheduled_for, submitted_at, submission_method, submission_verified_at, idempotency_key, lock_token, locked_at, attempt_count, last_error, recruiter_*, next_interview_at, follow_up_at, notes | unique (user_id, job_id); unique idempotency_key; check automated `applied` ⇒ verified; lock pair check; partial idx for scheduled, submitted, follow-ups | owner all; **column grants** (users cannot write verification, lock, idempotency, attempts, last_error) |
+| `applications` | job_id, status, priority 0–100, resume_id, match_score, approved_at, scheduled_for, submitted_at, submission_method, submission_verified_at, idempotency_key, lock_token, locked_at, attempt_count, last_error, recruiter_*, next_interview_at, follow_up_at, notes | unique (user_id, job_id); unique idempotency_key; check automated `applied` ⇒ verified; lock pair check; lock ⇔ `applying` (`applications_claim_matches_status`); approved/scheduled/applying ⇒ `approved_at` (`applications_approval_recorded`); status transitions guarded by trigger; partial idx for scheduled, submitted, follow-ups | owner all; **column grants** (users cannot write status, approved_at, scheduled_for, submitted_at, submission_method, verification, lock, idempotency, attempts, last_error — those change only through the functions below) |
 | `application_documents` | kind, version, title, content, storage_path, is_approved, model, prompt_version_id | unique (application_id, kind, version) | owner all |
 | `application_answers` | question, answer, source, is_verified, model, prompt_version_id | — | owner all |
 | `application_events` | event_type, from_status, to_status, actor, message, metadata | idx (application_id, created_at desc), (user_id, created_at desc) | owner select; insert only with actor = 'user' (append-only) |
@@ -71,14 +71,40 @@ Object paths start with `<user_id>/`. Owner has full access to `documents/<uid>/
 - `set_updated_at()` on all mutable tables.
 - `handle_new_user()` (security definer) on `auth.users` insert → `profiles`, `job_preferences`, `automation_settings`.
 - `touch_assistant_thread()` trigger (security invoker) — after a message insert, sets the thread's `updated_at`.
-- `save_application_document(p_application_id, p_kind, p_title, p_content, p_source, p_model, p_prompt_version_id, p_grounding_flags)` (security invoker) — locks the application, appends version max+1 of that kind, moves discovered/qualified to drafting with an event. Returns the version.
-- `mark_application_ready(p_application_id, p_confirm_flags)` (security invoker) — discovered/qualified/drafting → pending_approval; needs a cover letter or email; refuses while the latest version of any kind has grounding flags unless confirmed; writes an event.
-- `record_job_evaluation(p_job_id, p_score jsonb, p_requirements jsonb, p_next_status)` (security invoker) — inserts a `job_scores` row, replaces `job_requirements`, sets `applications.match_score` (and priority when qualified), changes status only from discovered/analyzing/qualified, and writes a `job.evaluated` event.
+- `save_application_document(p_application_id, p_kind, p_title, p_content, p_source, p_model, p_prompt_version_id, p_grounding_flags)` (security definer since Phase 6) — locks the application, appends version max+1 of that kind, moves discovered/qualified to drafting with an event. Returns the version.
+- `mark_application_ready(p_application_id, p_confirm_flags)` (security definer since Phase 6) — discovered/qualified/drafting → pending_approval; needs a cover letter or email; refuses while the latest version of any kind has grounding flags unless confirmed; writes an event.
+- `record_job_evaluation(p_job_id, p_score jsonb, p_requirements jsonb, p_next_status)` (security definer since Phase 6) — inserts a `job_scores` row, replaces `job_requirements`, sets `applications.match_score` (and priority when qualified), changes status only from discovered/analyzing/qualified, and writes a `job.evaluated` event.
 - `apply_portfolio_sync(p_snapshot jsonb)` (security invoker) — applies a portfolio snapshot atomically: links chosen local rows, upserts by `portfolio_ref` (portfolio value wins when non-null), unlinks rows removed from the portfolio. Skills: inserts new ones only. Returns per-section counts. Columns `portfolio_ref` exist on `profile_links`, `professional_experiences`, `education`, `professional_skills`, `projects`; `profiles.portfolio_synced_at` records the last sync.
 - `ingest_jobs(p_source_id uuid, p_jobs jsonb)` (security invoker) — inserts jobs and a `discovered` application per new job in one statement; any unique conflict (dedupe hash, `(user_id, url)`, `(user_id, source_id, external_id)`) is skipped. Returns `inserted_count`, `skipped_count`.
-- `set_job_archived(p_job_id uuid, p_archived boolean)` (security invoker) — archives (only before approval) or restores the job's application and writes an `application_events` row. Idempotent.
+- `set_job_archived(p_job_id uuid, p_archived boolean)` (security definer since Phase 6) — archives (only before approval) or restores the job's application and writes an `application_events` row. Idempotent.
 - View `job_listings` (security invoker): jobs + application status + source key/name + `salary_upper = coalesce(salary_max, salary_min)`; used by lists, filters and counts.
 - `set_default_resume(p_resume_id uuid)` (security invoker) — clears the current default and sets the given resume; raises `P0002` if the resume is not the caller's. Executable by `authenticated` only.
+
+### Application state machine and queue (Phase 6, `20261118000000_application_queue.sql`)
+
+Functions that change statuses run as **security definer**, check `auth.uid()` and filter by `user_id`, because
+users no longer hold UPDATE on status columns.
+
+- `application_transition_allowed(from, to)` (immutable) — the one allowed-transition graph. Trigger
+  `guard_status_transition` (before update, any writer including the service role) raises `22023` for other moves.
+- Approval follows content: triggers `approval_content_changed` (after insert/update/delete on `application_documents`
+  and `application_answers`) and `approval_resume_changed` (before update of `resume_id`) return an approved,
+  scheduled or failed application to `pending_approval` with an `application.approval_withdrawn` event, and refuse
+  changes while it is `applying`.
+- `approve_application(p_application_id, p_submit_after)` — pending_approval | failed → `approved` (`p_submit_after`
+  null or past) or `scheduled` (`scheduled_for = p_submit_after`). Needs a cover letter or email, every screening
+  answer verified, and a resume (chosen or default; pinned on the row). Resets attempts. Idempotent.
+- `withdraw_approval(p_application_id)` — approved | scheduled | failed → pending_approval.
+- `mark_application_submitted(p_application_id)` — manual submission from any pre-submission status → `applied`,
+  `submission_method = 'manual'`, `submitted_at = now()`.
+- **Worker contract (service role only; Phase 7 worker):** `claim_next_application(p_user_id, p_day_start, p_day_end)`
+  (per-user advisory lock; fails stale claims older than 60 min without retry; nothing when automation is off/paused or
+  the daily limit — every submission of the local day plus claims in flight — is used; picks approved/scheduled due
+  rows by priority desc, created_at with `for update skip locked`; writes an `automation_runs` row with idempotency key
+  `submit:<application idempotency_key>:<lock_token>`), `release_application_claim` (no attempt counted),
+  `fail_application_attempt` (retryable only before the final click: back to `scheduled` after
+  `retry_backoff_minutes` while attempts ≤ `max_retries`, else `failed` + run `needs_attention`),
+  `complete_application_submission` (requires non-empty evidence; sets `submission_verified_at`).
 
 ## Migration history
 

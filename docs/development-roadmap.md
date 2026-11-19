@@ -101,15 +101,29 @@ against verified profile.
 Limits: answers are not streamed (the reply appears when complete, usually a few seconds); no actions by design;
 the model only sees the last 20 messages of a conversation.
 
-## Phase 6 — Queue, approval and scheduling
+## Phase 6 — Queue, approval and scheduling ✅ (pending migration on Supabase)
 
-Trigger.dev setup; application state machine and events; approval workflow; scheduler that respects the
-submission window; daily limit; claim function with lock + idempotency key; safe retry with backoff;
-execution history.
+| Item | Status |
+| --- | --- |
+| Application state machine (one transition graph, trigger on every writer) and events | Done — DB-tested |
+| Status/approval columns writable only through SQL functions | Done — DB-tested |
+| Approval workflow (approve, withdraw, approval withdrawn when documents/answers/resume change) | Done — DB-tested |
+| Window-aware scheduling at approval (`scheduled_for = nextWindowStart`) and queue state per row | Done — unit-tested |
+| Daily limit (all submissions of the local day + claims in flight) | Done — DB-tested in the claim function |
+| Claim with per-user lock, lock token, idempotency key, run row; release; retry with backoff; stale-claim handling; verified completion | Done — DB-tested; no caller until the Phase 7 worker |
+| Applications page (`/applications`): waiting for approval, queue, needs attention, recently applied, activity | Done — build-verified; not yet run against a live database |
+| Manual submission (`Mark as applied`) | Done |
+| Trigger.dev, scheduled discovery, background scheduler | **Moved to Phase 7** (user decision 2026-11-17): the worker that runs them arrives with Playwright |
 
-## Phase 7 — Browser automation
+Original scope: Trigger.dev setup; application state machine and events; approval workflow; scheduler that respects
+the submission window; daily limit; claim function with lock + idempotency key; safe retry with backoff; execution
+history.
 
-Playwright worker in isolated contexts; supported-flow adapters (start with public ATS forms that permit it);
+## Phase 7 — Background worker and browser automation
+
+Trigger.dev setup (`SUPABASE_SECRET_KEY`, `TRIGGER_SECRET_KEY`); scheduled discovery; scheduler task calling
+`claim_next_application` → `release_application_claim` / `fail_application_attempt` / `complete_application_submission`;
+`automation_runs` for syncs; Playwright worker in isolated contexts; supported-flow adapters (start with public ATS forms that permit it);
 field mapping from verified data; uploads; screenshots; human-intervention stops (CAPTCHA, login, unknown or
 sensitive fields, blocked automation, layout change); final submit only after approval + window re-check;
 submission verification.
@@ -139,15 +153,20 @@ documentation review.
 - Scoring runs in the request (about 5–30 s per job); batches run one job per request from the browser.
 - Grounding is heuristic: it checks job-listed skills and numbers, not every sentence. You still review each document.
 - Settings changes and emergency pause are logged to server logs but not yet to a user-visible audit trail.
+- Nothing submits automatically yet: approved applications wait in the queue and the user submits them and marks them
+  applied. Automation must stay off in Settings until the Phase 7 worker exists (turning it on has no effect today).
+- Users can no longer set statuses directly. Tracking statuses (interview, assessment, rejected, withdrawn) get their
+  actions with the Phase 8 tracker; the transitions already exist in the state machine.
+- "Mark as applied" records the current time; back-dating a submission is not supported.
 
 ## Technical debt
 
 | Item | Plan |
 | --- | --- |
 | Hand-written DB types | Replace with generated types once the Supabase CLI is logged in and linked |
-| Automation run records for syncs | Syncs record status on `job_sources`; `automation_runs` rows come with workers (Phase 6) |
+| Automation run records for syncs | Syncs record status on `job_sources`; `automation_runs` rows come with workers (Phase 7) |
 | Portfolio project dates | Portfolio stores a free-text period; JobPilot project dates stay manual |
 | Profile item ordering | Lists sort by date; manual ordering (`sort_order`) has no UI yet |
 | No e2e tests | Add Playwright smoke tests against a Supabase test project (carried over to Phase 3) |
 | No password reset flow | Owner resets via Supabase dashboard; add flow if needed |
-| Settings audit trail | Add `settings_events` or generalize events table (Phase 6) |
+| Settings audit trail | Add `settings_events` or generalize events table (Phase 8) |

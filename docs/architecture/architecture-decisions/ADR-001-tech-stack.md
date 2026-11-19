@@ -14,7 +14,7 @@ than theoretical scale.
   shadcn/ui (Radix base), Lucide icons, React Hook Form + Zod.
 - **Data/Auth/Files:** Supabase (Postgres 17, Auth, Storage, RLS).
 - **AI:** OpenAI API with structured outputs behind a central service (Phase 4).
-- **Background:** Trigger.dev (Phase 6). **Automation:** Playwright, run in workers only (Phase 7).
+- **Background:** Trigger.dev (Phase 7, see ADR-003 amendment). **Automation:** Playwright, run in workers only (Phase 7).
 - **Hosting:** Vercel (web), Supabase cloud, Trigger.dev cloud. **CI:** GitHub Actions.
 - **Tests:** Vitest; PGlite for migration/RLS tests; Playwright for e2e.
 - **Package manager:** pnpm.

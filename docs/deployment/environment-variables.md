@@ -8,13 +8,13 @@ Public values are parsed and validated in `src/config/env.ts`; the app fails fas
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Browser + server | Supabase clients, proxy | In use |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Browser + server | Supabase clients, proxy | In use |
 | `PORTFOLIO_DATABASE_URL` | Optional | Server only | Portfolio sync (read-only `jobpilot_reader` login, Supabase pooler URL) | In use when set |
-| `SUPABASE_SECRET_KEY` | Phase 6 | Workers only | Background tasks, submission service | Planned |
+| `SUPABASE_SECRET_KEY` | Phase 7 | Workers only | Background tasks, submission service | Planned |
 | `AI_PROVIDER` | Optional | Server only | `gemini` or `openai`; unset = gemini when `GEMINI_API_KEY` is set, else openai | In use |
 | `GEMINI_API_KEY` | For AI features on Gemini | Server only | `src/config/server-env.ts` → `src/lib/ai/run-structured.ts` | In use |
 | `GEMINI_API_KEY2`, `GEMINI_API_KEY_3`, … | Optional | Server only | Fallback keys, used in numeric order when earlier keys hit a limit or are rejected (`src/lib/ai/key-pool.ts`) | In use when set |
 | `OPENAI_API_KEY` | For AI features on OpenAI | Server only | Same | In use when the provider is openai |
 | `AI_MODEL` | Optional | Server only | Comma-separated models for every prompt, in fallback order (default on Gemini `gemini-2.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite`; on OpenAI each prompt's `default_model`) | In use when set |
-| `TRIGGER_SECRET_KEY` | Phase 6 | Server/workers | Trigger.dev SDK | Planned |
+| `TRIGGER_SECRET_KEY` | Phase 7 | Server/workers | Trigger.dev SDK | Planned |
 | `SENTRY_DSN` | Phase 8 | Server + browser | Error reporting | Planned |
 
 ### Setting up PORTFOLIO_DATABASE_URL

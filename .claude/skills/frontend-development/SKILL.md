@@ -38,6 +38,13 @@ const form = useForm<Input>({ resolver: zodResolver(schema), defaultValues });
 
 Only Tailwind utilities backed by `src/app/globals.css`. Light theme: `#f2f2f2` canvas, white cards, charcoal primary. Dark: `#0d1117` canvas, `#161b22` cards, blue primary. Full reference: `docs/design/color-tokens.md`.
 
+## Live AI UI
+
+- Progress shows real server events only (Ask JobPilot: `src/features/assistant/progress.ts`); pacing for readability is fine, invented steps are not.
+- Render model text with `FormattedText` (`features/assistant/components/assistant-parts.tsx`): lists and bold as React elements, never `dangerouslySetInnerHTML`.
+- Format dates with the user's timezone from settings (`formatDate` / `formatDateTime`) to avoid hydration mismatches.
+- Animated text uses the `text-shimmer` utility (theme tokens, respects reduced motion).
+
 ## Verify
 
 - 390 / 768 / 1280 px, light and dark.

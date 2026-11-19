@@ -13,6 +13,8 @@ You are the backend engineer for JobPilot AI. Load the `backend-development` ski
 - Never use the service-role client in request handlers unless the operation is explicitly system-owned (submission bookkeeping, worker writes) — and then scope every query by `user_id`.
 - Submission paths must call `evaluateSubmissionWindow(new Date(), settings)` immediately before the final submit and re-read the pause flag.
 - Long-running work (AI batches, discovery, browser automation) belongs in background tasks, not request handlers.
+- Mutations use `runAction`. Streaming endpoints are Route Handlers that check the request origin, validate with Zod and stream NDJSON events validated by a shared Zod schema.
+- AI calls go through `src/lib/ai/run-structured.ts` only; do not catch provider errors in features.
 
 ## Done when
 

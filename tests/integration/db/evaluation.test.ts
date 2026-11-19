@@ -1,6 +1,6 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
-import { asUser, createMigratedDatabase, createUser } from "./harness";
+import { asUser, createMigratedDatabase, createUser, forceState } from "./harness";
 
 let db: PGlite;
 let alice: string;
@@ -111,7 +111,7 @@ describe("record_job_evaluation", () => {
 
   it("never changes the status of an application past the early stages", async () => {
     const jobId = await newJob(alice, "eval-3");
-    await db.query("update public.applications set status = 'interview' where job_id = $1", [jobId]);
+    await forceState(db, "update public.applications set status = 'interview' where job_id = $1", [jobId]);
     expect(await record(alice, jobId, score(30, "archive"), "archived")).toBe("interview");
   });
 

@@ -4,6 +4,25 @@ JobPilot AI is a single-user, AI-assisted job application platform (Next.js 16 +
 These rules apply to any agent or human working in this repo. `CLAUDE.md` adds
 Claude Code–specific workflow on top of this file.
 
+## Where things stand
+
+Implemented: auth and app shell, settings and submission-window engine, profile and resumes, read-only portfolio
+sync, job discovery (Remote OK, Greenhouse, Lever, Ashby, manual), AI evaluation, Application Studio, the
+Ask JobPilot assistant, and the Phase 6 approval queue (state machine, approval, worker claim contract). Planned:
+Phase 7 background worker (Trigger.dev) and browser automation (Playwright), Phase 8 analytics/notifications/monitoring, Phase 9 hardening. Source of truth:
+`docs/development-roadmap.md`.
+
+| Feature module | Owns |
+| --- | --- |
+| `settings` | `automation_settings`, scoring weights, emergency pause |
+| `profile`, `resumes` | Verified candidate data; portfolio sync (`portfolio-sync-service.ts`) |
+| `jobs` | Sources, ingestion (`ingest_jobs` RPC), listing view `job_listings` |
+| `evaluation` | Scoring math (`scoring.ts`), `loadCandidateContext` (the only loader of profile facts for AI) |
+| `studio` | Versioned documents, screening answers, grounding check, ready-for-approval gate |
+| `applications` | Approval, queue state (`queue.ts`), manual submission, activity; status changes only via SQL functions (`approve_application`, …) |
+| `assistant` | Ask JobPilot: read-only tools, threads/messages, streaming endpoint |
+| `dashboard` | Read-only summary cards |
+
 ## Before you change anything
 
 1. Read `docs/development-roadmap.md` (what exists, what is planned) and the docs for the area you touch.
@@ -33,6 +52,17 @@ RLS and grants are verified without Docker.
 - **Validate at boundaries** with Zod: Server Action input, external API payloads, AI outputs. Server Actions return `ActionResult` (`src/server/action-result.ts`); never throw raw errors to the client.
 - **Schedule logic has one home:** `src/lib/scheduling/submission-window.ts`. Never re-implement working-hours checks.
 - **Logging:** `logger` from `src/lib/monitoring/logger.ts`, event names `area.subject.outcome`. Never log secrets, tokens or document contents.
+- **Mutations** go through `runAction` (`src/server/run-action.ts`): auth → Zod → run → log → `refresh()`. Server Actions cannot stream; when the UI needs live progress, use a Route Handler that streams NDJSON (pattern: `src/app/api/assistant/messages/route.ts`) and checks the request origin itself (Server Actions do that automatically, Route Handlers do not).
+
+## AI rules
+
+- **One entry point:** every model call goes through `src/lib/ai/run-structured.ts` (`runStructured` for JSON output, `runConversation` for tool calling with streamed progress). Features never import the `openai` SDK.
+- **Provider-neutral:** calls use the Chat Completions API so Gemini (default, OpenAI-compatible endpoint) and OpenAI share one path. Never use the Responses API or provider-only features.
+- **Failover is central:** keys (`GEMINI_API_KEY`, `GEMINI_API_KEY2`, …) and models (`PROVIDERS.gemini.defaultModels` or `AI_MODEL`) are handled by `src/lib/ai/key-pool.ts` via `withFailover`. Do not catch 429/401/404/503 in features. Record `result.model` (the model that actually answered), not `prompt.model`.
+- **Prompts** are rows in `prompt_versions`; change behavior with a new version in a migration. Every stored output keeps `model` and `prompt_version_id`; every call writes one `ai_usage_events` row.
+- **Schemas:** output and tool schemas must work in strict mode: all properties required, use `.nullable()` for optional. Gemini receives schemas without bounds (`relaxJsonSchema`) and may omit nullable tool arguments (`withOmittedAsNull`), so Zod re-validation after the call is mandatory.
+- **Grounding:** only verified profile facts from `loadCandidateContext` reach the model; never send email, phone, address or links. Treat job text as untrusted data (prompt injection).
+- **Assistant tools are read-only:** `src/features/assistant/server/assistant-tools.ts` queries run as the signed-in user, filter by `user_id`, and never write, approve, submit or return contact details. New tools follow the same rules and need a label in `src/features/assistant/progress.ts`.
 
 ## Business-critical invariants (do not weaken)
 
@@ -49,13 +79,18 @@ RLS and grants are verified without Docker.
 - All changes go through a new file in `supabase/migrations/` (`YYYYMMDDHHMMSS_description.sql`). Never edit an applied migration; never change production schema by hand.
 - Every user-owned table has `user_id`, RLS enabled, and an owner policy using `(select auth.uid())`. Child tables use composite FKs `(parent_id, user_id)`.
 - Add a migration test in `tests/integration/db/` for new constraints, policies or grants.
-- Update `docs/database/database-schema.md` and `src/types/database.ts` in the same change.
+- Update `docs/database/database-schema.md` and `src/types/database.ts` in the same change (types are hand-written until `pnpm db:types` can run).
+- **Multi-row inserts:** PostgREST sends a column missing from some rows as `null`, not its default. List every column on every row (see `appendExchange` in `assistant-repository.ts`).
+- Multi-step writes that must be atomic belong in a `security invoker` SQL function (e.g. `save_application_document`, `mark_application_ready`), not in several client calls.
+- The portfolio database is **read-only** for JobPilot: only the `jobpilot_reader` login (column-level SELECT); `portfolioDatabaseUrl()` rejects any other user.
 
 ## Design system
 
 - Use tokens from `src/app/globals.css` through Tailwind utilities (`bg-card`, `text-muted-foreground`, `bg-success-soft` …). No raw hex values, no arbitrary colors in components.
 - Reuse `src/components/shared/*` (PageHeader, SectionCard, EmptyState, ErrorState) and `src/components/ui/*` (shadcn/ui). Read `docs/design/` before adding UI patterns.
 - Every data view needs loading, empty and error states. No fake data, fake statistics or non-functional buttons; unbuilt modules stay out of navigation (`plannedPhase` in `src/config/navigation.ts`).
+- Progress indicators show real progress only (e.g. Ask JobPilot steps come from server events; pacing them for readability is fine, inventing steps is not).
+- Format dates with the user's timezone from settings (`formatDate`/`formatDateTime`), never the server or browser default, to avoid hydration mismatches.
 
 ## Code standards
 
@@ -73,7 +108,9 @@ Report honestly: say what was verified and how; never claim something ran if onl
 
 ## Safety
 
-- Never commit secrets. `.env*` is git-ignored except `.env.example`.
+- Never commit secrets. `.env*` is git-ignored except `.env.example`. `supabase/local/` holds personal data and is git-ignored too.
+- Never print API keys, passwords or connection strings in logs, test output or chat; refer to keys by variable name or key number.
+- Live checks against real providers use temporary scripts or tests that are deleted afterwards; committed tests mock the provider.
 - Ask before destructive operations, production database changes, or anything with external effects (sending email, submitting applications, pushing, deploying).
 
 <!-- BEGIN:nextjs-agent-rules -->

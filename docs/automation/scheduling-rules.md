@@ -1,7 +1,8 @@
 # Scheduling rules
 
 Status: **Implemented** — rules engine (`src/lib/scheduling/submission-window.ts`), settings storage and UI,
-dashboard status. The background scheduler that applies these rules is **Planned (Phase 6)**.
+dashboard status, approval-time scheduling and the queue state per row (`src/features/applications/queue.ts`, Phase 6).
+The background worker that submits is **Planned (Phase 7)**.
 
 ## Defaults (per user, `automation_settings`)
 
@@ -25,7 +26,7 @@ dashboard status. The background scheduler that applies these rules is **Planned
 5. End time is exclusive: at exactly 17:00:00 the window is closed.
 6. A task that started inside the window must re-check immediately before submitting; if it is now 17:00 or later it stops and the application stays queued.
 7. Applications approved outside the window keep status `scheduled` with `scheduled_for = nextWindowStart`.
-8. Daily limit counts verified submissions within `localDayBounds(now, timezone)`.
+8. Daily limit counts every submission (manual and automated) within `localDayBounds(now, timezone)`, plus claims in flight (`claim_next_application`).
 9. Emergency pause blocks submissions immediately and has no automatic expiry.
 
 ## API

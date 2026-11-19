@@ -17,10 +17,10 @@ follow-ups — while keeping the human in control of every submission.
 | Automation settings + emergency pause | Implemented |
 | Profile, experience, skills, education, projects, preferences, resume versions + files | Implemented |
 | Job discovery connectors, normalization, dedupe | Implemented (on-demand sync) |
-| AI job evaluation and scoring | Planned — Phase 4 |
-| Application Studio (cover letters, answers, exports) | Planned — Phase 5 |
-| Queue, approval, scheduling, daily limits (Trigger.dev) | Planned — Phase 6 |
-| Supported browser automation (Playwright) | Planned — Phase 7 |
+| AI job evaluation and scoring | Implemented |
+| Application Studio (cover letters, answers, exports) | Implemented |
+| Queue, approval, scheduling, daily limits | Implemented (manual submission; worker in Phase 7) |
+| Background worker (Trigger.dev) and supported browser automation (Playwright) | Planned — Phase 7 |
 | Tracking (table/kanban), analytics, notifications, monitoring | Planned — Phase 8 |
 
 ## User workflow (target)

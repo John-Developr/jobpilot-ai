@@ -1,6 +1,6 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
-import { asUser, createMigratedDatabase, createUser } from "./harness";
+import { asUser, createMigratedDatabase, createUser, forceState } from "./harness";
 
 let db: PGlite;
 let alice: string;
@@ -52,7 +52,7 @@ describe("save_application_document", () => {
 
   it("does not move applications that are past drafting", async () => {
     const app = await newApplication(alice, "studio-2");
-    await db.query("update public.applications set status = 'interview' where id = $1", [app]);
+    await forceState(db, "update public.applications set status = 'interview' where id = $1", [app]);
     await save(alice, app, "recruiter_message", "hi");
     expect(await status(app)).toBe("interview");
   });
@@ -90,7 +90,7 @@ describe("mark_application_ready", () => {
   it("refuses applications already past approval", async () => {
     const app = await newApplication(alice, "studio-7");
     await save(alice, app, "cover_letter", "ok");
-    await db.query("update public.applications set status = 'approved' where id = $1", [app]);
+    await forceState(db, "update public.applications set status = 'approved', approved_at = now() where id = $1", [app]);
     await expect(ready(alice, app, false)).rejects.toThrow(/already approved/);
   });
 });

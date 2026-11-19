@@ -1,6 +1,6 @@
 import "server-only";
 import type { AuthenticatedContext } from "@/server/auth";
-import { assertMutation, RepositoryError, UserFacingError } from "@/server/errors";
+import { assertMutation, RepositoryError, throwRpcError, UserFacingError } from "@/server/errors";
 import type { DbEnum, Tables, Views } from "@/types/database";
 import { DOCUMENT_KINDS, isDocumentKind, type DocumentKind } from "../documents";
 import type { AnswerInput } from "../schemas";
@@ -154,8 +154,7 @@ export async function saveDocumentVersion(
     p_prompt_version_id: input.promptVersionId,
     p_grounding_flags: input.groundingFlags,
   });
-  if (error?.code === "P0002") throw new UserFacingError("This application no longer exists.");
-  if (error) throw new RepositoryError("Failed to save document", { cause: error });
+  if (error) throwRpcError("save document", error);
   return data;
 }
 
@@ -176,8 +175,7 @@ export async function markApplicationReady({ supabase }: AuthenticatedContext, a
   });
   if (!error) return;
   if (error.code === "P0001") throw new UserFacingError("Some documents have unconfirmed warnings. Fix them or confirm they are accurate.");
-  if (error.code === "22023" || error.code === "P0002") throw new UserFacingError(error.message.replace(/^./, (c) => c.toUpperCase()) + ".");
-  throw new RepositoryError("Failed to mark application ready", { cause: error });
+  throwRpcError("mark application ready", error);
 }
 
 // --- Screening answers --------------------------------------------------------------

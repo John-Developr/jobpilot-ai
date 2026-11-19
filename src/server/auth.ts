@@ -1,12 +1,19 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient, type SupabaseServerClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 
+/**
+ * Who a repository call acts for. In the app the client carries the user's session (RLS
+ * applies); in background workers it is the secret-key client (`src/lib/supabase/service.ts`),
+ * so every repository must filter by `userId` itself.
+ */
 export interface AuthenticatedContext {
   userId: string;
   email: string | null;
-  supabase: SupabaseServerClient;
+  supabase: SupabaseClient<Database>;
 }
 
 /**

@@ -20,7 +20,8 @@ follow-ups — while keeping the human in control of every submission.
 | AI job evaluation and scoring | Implemented |
 | Application Studio (cover letters, answers, exports) | Implemented |
 | Queue, approval, scheduling, daily limits | Implemented (manual submission; worker in Phase 7) |
-| Background worker (Trigger.dev) and supported browser automation (Playwright) | Planned — Phase 7 |
+| Background worker (Trigger.dev): scheduled discovery, submission scheduler | Implemented, not deployed — Phase 7 |
+| Supported browser automation (Playwright site adapters) | Planned — Phase 7 |
 | Tracking (table/kanban), analytics, notifications, monitoring | Planned — Phase 8 |
 
 ## User workflow (target)

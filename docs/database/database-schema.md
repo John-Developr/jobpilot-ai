@@ -106,6 +106,14 @@ users no longer hold UPDATE on status columns.
   `retry_backoff_minutes` while attempts ≤ `max_retries`, else `failed` + run `needs_attention`),
   `complete_application_submission` (requires non-empty evidence; sets `submission_verified_at`).
 
+### Worker access (Phase 7, `20261118120000_worker_access.sql`)
+
+- `ingest_jobs(p_source_id, p_jobs, p_user_id default null)` — `p_user_id` is honoured only when the caller's role is
+  `service_role` (no `auth.uid()`); signed-in users always act as themselves and get `42501` for another user id.
+- `claim_next_application(p_user_id, p_day_start, p_day_end, p_candidates uuid[])` replaces the 3-argument version:
+  only listed candidates (due applications whose site has an adapter) can be claimed; empty or null claims nothing
+  but still clears stale claims.
+
 ## Migration history
 
 See [migrations.md](migrations.md).

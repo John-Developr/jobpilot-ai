@@ -29,9 +29,10 @@ pnpm dev                     # http://localhost:3000
 2. Environment variables (Production + Preview): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 3. Deploy. Add the deployment URL to Supabase Auth URL configuration.
 
-## 4. Trigger.dev, OpenAI, Sentry
+## 4. Trigger.dev (background worker)
 
-Planned for Phases 4, 6 and 8; each phase extends this guide and `environment-variables.md`.
+See [background-processing.md](../architecture/background-processing.md#setup-once). Deploy the worker with
+`pnpm trigger:deploy` after the migrations it needs are pushed. Sentry: Phase 8.
 
 ## Release checklist
 

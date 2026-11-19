@@ -7,6 +7,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Added
 
+- **Background worker (Phase 7, slice 1).** Trigger.dev tasks (`src/trigger/`): `discover-jobs` syncs enabled job
+  sources every 6 hours; `schedule-submissions` (every 10 min) and `submit-application` claim and run due submissions
+  for job sites with a form adapter, re-checking the window and pause right before the final click. No adapter exists
+  yet, so nothing is submitted. Not deployed: needs a Trigger.dev project, `TRIGGER_PROJECT_REF`, `TRIGGER_SECRET_KEY`
+  and `SUPABASE_SECRET_KEY`.
+- **Automation page** (`/automation`): history of background runs.
+- `ingest_jobs` accepts a user id from the worker's service role; `claim_next_application` takes the candidate list.
+
 - **Approval and submission queue (Phase 6).** New Applications page (`/applications`): approve prepared applications,
   see the queue in submission order with each row's state (due now, due at the next window, daily limit reached, paused),
   withdraw an approval, mark an application as applied after submitting it yourself, review failed submissions, and an

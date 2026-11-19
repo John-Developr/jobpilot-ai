@@ -1,6 +1,6 @@
 # Job discovery
 
-Status: **Implemented (Phase 3)** — on-demand "Sync now"; scheduled runs arrive in Phase 7. Code: `src/lib/integrations/job-sources/`, `src/features/jobs/`.
+Status: **Implemented (Phase 3)** — on-demand "Sync now"; scheduled runs every 6 hours via the `discover-jobs` worker task (Phase 7, once deployed). Code: `src/lib/integrations/job-sources/`, `src/features/jobs/`.
 
 ## Flow
 
@@ -10,7 +10,7 @@ Status: **Implemented (Phase 3)** — on-demand "Sync now"; scheduled runs arriv
 4. Keyword filter (title + source tags, whole-token match), schema validation, newest first, max 500 per sync.
 5. Duplicates: `dedupe_hash` = SHA-256 of folded `company|title|location`; plus unique canonical URL (tracking params stripped) and unique `(source, external id)`.
 6. `ingest_jobs` inserts new jobs and their `discovered` applications atomically, skipping any duplicate.
-7. Record `job_sources.last_synced_at` and `last_error` (warnings such as an unknown board name are kept there). `automation_runs` rows are added with background workers (Phase 7).
+7. Record `job_sources.last_synced_at` and `last_error` (warnings such as an unknown board name are kept there). Scheduled syncs also write one `automation_runs` row per source (shown on `/automation`).
 
 Cooldown: 10 minutes per source between successful syncs.
 
